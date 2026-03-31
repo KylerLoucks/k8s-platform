@@ -12,18 +12,26 @@ GitOps-oriented Kubernetes platform: **Argo CD + Helm + Terraform**, with **CI/C
 | **`charts/`** | **Helm charts** (Kubernetes packaging): `web`, `api`, `ws`, `worker`, `redis`. Base defaults live in each chart’s `values.yaml`. |
 | **`values/`** | **Per-environment Helm values** and image tags: `values/<chart>/<env>/values.yaml` plus `version.yaml` (image tag / digest overrides). |
 | **`argocd/`** | **Argo CD Application manifests** (bootstrap) that point Argo at this repo: chart path + value file list per app/env. |
-| **`terraform/aws/`** | **AWS platform**: VPC, EKS, RDS, Argo CD, External Secrets Operator, AWS Load Balancer Controller, VPN/OpenVPN pieces, etc. See [`terraform/aws/README.md`](./terraform/aws/README.md). |
+| **`terraform/aws/`** | **AWS platform**: VPC, EKS, RDS, Argo CD, External Secrets Operator, AWS Load Balancer Controller, etc. See [`terraform/aws/README.md`](./terraform/aws/README.md). |
 | **`.github/workflows/`** | **CI/CD**: `build.yml`, `gitops-promote.yml`, `promote.yml` (single app), `promote-all.yml` (all apps), `tf-ci.yml` (Terraform plan/apply for `terraform/aws`). |
 | **`docker-compose.yml`** | **Local stack**: Postgres, Redis, api, ws, worker, web (mirrors the app architecture without Kubernetes). |
 
 ### `apps/` — services you build and run
 
-| Path | Role |
-|------|------|
-| **`apps/web/`** | React (Vite) SPA, nginx in production image; `api-config.js` / env for API and WebSocket URLs. |
-| **`apps/api/`** | FastAPI HTTP API, Alembic migrations, Postgres + Redis; job enqueue API. |
-| **`apps/ws/`** | FastAPI WebSocket service; Redis pub/sub fan-out to rooms (e.g. notifications). |
-| **`apps/worker/`** | Python worker: Redis queue consumer, Postgres, publishes events for realtime updates. |
+| Path | Role | Links to other services |
+|------|------|--------------------------|
+| **`apps/web/`** | React (Vite) SPA, nginx in production image; `api-config.js` / env for API and WebSocket URLs. | **Calls** `api` over HTTP (`/api/...`) and **subscribes** to `ws` (`/ws?room=notifications`) for realtime job updates. |
+| **`apps/api/`** | FastAPI HTTP API, Alembic migrations, Postgres + Redis; job enqueue API. | **Reads/writes** Postgres for app data, **pushes jobs** to Redis queue (`jobs:queue`) for `worker`, and serves responses to `web`. |
+| **`apps/ws/`** | FastAPI WebSocket service; Redis pub/sub fan-out to rooms (e.g. notifications). | **Subscribes** to Redis pub/sub (`jobs:events`) and **broadcasts** those events to connected `web` clients. |
+| **`apps/worker/`** | Python worker: Redis queue consumer, Postgres, publishes events for realtime updates. | **Consumes** Redis queue (`jobs:queue`) from `api`, **updates** Postgres job/item state, then **publishes** lifecycle events to Redis pub/sub (`jobs:events`) for `ws`. |
+
+Runtime interaction summary:
+
+- `web -> api`: schedule/list jobs over HTTP.
+- `api -> redis queue`: enqueue `job_id` to `jobs:queue`.
+- `worker <- redis queue`: take job, mark `processing`, complete work in Postgres.
+- `worker -> redis pub/sub`: publish `job.processing` and `job.completed` to `jobs:events`.
+- `ws <- redis pub/sub -> web`: fan out events to all connected browsers in `notifications`.
 
 Each app directory contains its own **`Dockerfile`** (and typically `requirements.txt` / `package.json` as appropriate). CI builds from these paths when `apps/<name>/` changes.
 
