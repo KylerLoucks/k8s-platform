@@ -255,6 +255,12 @@ variable "rds_max_allocated_storage" {
   default     = 30
 }
 
+variable "rds_master_secret_tags" {
+  description = "Custom tags to apply to the RDS-managed master secret after creation"
+  type        = map(string)
+  default     = {}
+}
+
 variable "rds_storage_type" {
   description = "Storage type for the RDS PostgreSQL database"
   type        = string
