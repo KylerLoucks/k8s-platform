@@ -46,8 +46,8 @@ config:
   # DB_USER, DB_PASSWORD from RDS-managed SM secret (dataFrom.find). DB_HOST from separate SM secret (hostRemoteRef).
   DB_PORT: "5432"
   DB_NAME: platform
-  # Must match the browser origin that serves the SPA.
-  CORS_ALLOW_ORIGIN: "http://app.dev-us.local"
+  # Dev: allow browser access from whichever host you open web on (ALB/DNS/local).
+  CORS_ALLOW_ORIGIN: "*"
   REDIS_ADDR: redis.dev-redis.svc.cluster.local:6379
 
 secrets: {}

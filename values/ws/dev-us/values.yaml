@@ -46,8 +46,8 @@ config:
   # DB_* from External Secrets: credentials via RDS-managed secret; host via hostRemoteRef.
   DB_PORT: "5432"
   DB_NAME: platform
-  # Must match the browser origin that serves the SPA.
-  WS_ALLOWED_ORIGINS: "http://app.dev-us.local"
+  # Dev: accept browser websocket origins from any host (tighten in production).
+  WS_ALLOWED_ORIGINS: "*"
   REDIS_URL: redis://redis.dev-redis.svc.cluster.local:6379/0
 
 secrets: {}

@@ -16,10 +16,12 @@ function notificationsWsUrl(): string {
   }
   if (typeof window !== "undefined") {
     const { protocol, hostname } = window.location;
+    const wsProto = protocol === "https:" ? "wss:" : "ws:";
     if (hostname === "localhost" || hostname === "127.0.0.1") {
-      const wsProto = protocol === "https:" ? "wss:" : "ws:";
       return `${wsProto}//${hostname}:8001/ws?room=notifications`;
     }
+    // In-cluster ingress path routing: same host, WS service on /ws
+    return `${wsProto}//${window.location.host}/ws?room=notifications`;
   }
   return "";
 }

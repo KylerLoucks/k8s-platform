@@ -6,14 +6,13 @@ image:
   pullPolicy: IfNotPresent
 
 # Browser-visible API URL injected into window.__API_BASE__.
-# Option 1 (preferred, DNS): http://api.dev-us.yourdomain.com
-# Option 2 (temporary, no DNS): http://alb-dns-name>.us-east-1.elb.amazonaws.com
-apiPublicUrl: "http://k8s-platformdevus-a83b11dc3e-648936574.us-east-1.elb.amazonaws.com/api"
+# Empty string means same-origin relative path (/api), which works best with
+# single-ALB path routing and avoids cross-origin issues in dev.
+apiPublicUrl: ""
 
 # Browser-visible WS URL injected into window.__WS_BASE__.
-# Option 1 (preferred, DNS): ws://ws.dev-us.yourdomain.com
-# Option 2 (temporary, no DNS): ws://alb-dns-name>.us-east-1.elb.amazonaws.com
-wsPublicUrl: "ws://k8s-platformdevus-a83b11dc3e-648936574.us-east-1.elb.amazonaws.com/ws"
+# Empty string makes the app derive ws(s)://<current-host>/ws at runtime.
+wsPublicUrl: ""
 
 ingress:
   enabled: true
