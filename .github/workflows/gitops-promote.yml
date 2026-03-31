@@ -84,22 +84,22 @@ jobs:
           commit_message: "chore(deploy): bump dev-us-version.yaml to ${{ needs.resolve-tag.outputs.image_tag }}"
 
   # Gated promotion to prod-us (approval gate)
-  bump-prod-us:
-    name: Bump prod-us version.yaml
-    runs-on: ubuntu-latest
-    needs: [resolve-tag, bump-dev-us]
-    environment: production
-    if: needs.resolve-tag.outputs.apps_json != '[]'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: main
+  # bump-prod-us:
+  #   name: Bump prod-us version.yaml
+  #   runs-on: ubuntu-latest
+  #   needs: [resolve-tag, bump-dev-us]
+  #   environment: production
+  #   if: needs.resolve-tag.outputs.apps_json != '[]'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #         ref: main
 
-      - name: Bump prod-us version
-        uses: ./.github/actions/gitops-bump-tags
-        with:
-          env_name: prod-us
-          apps_json: ${{ needs.resolve-tag.outputs.apps_json }}
-          image_tag: ${{ needs.resolve-tag.outputs.image_tag }}
-          commit_message: "chore(deploy): bump prod-us-version.yaml to ${{ needs.resolve-tag.outputs.image_tag }}"
+  #     - name: Bump prod-us version
+  #       uses: ./.github/actions/gitops-bump-tags
+  #       with:
+  #         env_name: prod-us
+  #         apps_json: ${{ needs.resolve-tag.outputs.apps_json }}
+  #         image_tag: ${{ needs.resolve-tag.outputs.image_tag }}
+  #         commit_message: "chore(deploy): bump prod-us-version.yaml to ${{ needs.resolve-tag.outputs.image_tag }}"
