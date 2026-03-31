@@ -55,6 +55,13 @@ def job_process_seconds() -> float:
     return 2.0
 
 
+def stale_processing_seconds() -> int:
+    raw = os.environ.get("JOB_STALE_SECONDS", "").strip()
+    if raw.isdigit():
+        return max(30, int(raw))
+    return 600
+
+
 def pg_dsn() -> str:
     host = os.environ.get("DB_HOST", "").strip()
     port = os.environ.get("DB_PORT", "5432").strip()
@@ -72,9 +79,65 @@ def redis_client() -> redis.Redis:
     return redis.Redis.from_url(url, decode_responses=True)
 
 
+def mark_job_failed(job_id: str) -> None:
+    try:
+        conn = psycopg2.connect(pg_dsn())
+    except Exception:
+        log.exception("job %s: cannot connect to mark failed", job_id)
+        return
+    try:
+        conn.autocommit = False
+        with conn.cursor() as cur:
+            cur.execute(
+                "UPDATE jobs SET status = %s, completed_at = %s WHERE id = %s AND status = %s",
+                ("failed", datetime.now(timezone.utc), job_id, "processing"),
+            )
+        conn.commit()
+    except Exception:
+        log.exception("job %s: mark failed", job_id)
+        conn.rollback()
+    finally:
+        conn.close()
+
+
+def recover_stale_processing_jobs() -> int:
+    try:
+        conn = psycopg2.connect(pg_dsn())
+    except Exception:
+        log.exception("stale-job-recovery: postgres connect failed")
+        return 0
+    try:
+        conn.autocommit = False
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE jobs
+                SET status = 'failed', completed_at = %s
+                WHERE status = 'processing'
+                  AND created_at < NOW() - make_interval(secs => %s)
+                """,
+                (datetime.now(timezone.utc), stale_processing_seconds()),
+            )
+            updated = cur.rowcount
+        conn.commit()
+        if updated > 0:
+            log.warning("stale-job-recovery: marked %s processing job(s) failed", updated)
+        return updated
+    except Exception:
+        log.exception("stale-job-recovery: update failed")
+        conn.rollback()
+        return 0
+    finally:
+        conn.close()
+
+
 def process_job(rdb: redis.Redis, job_id: str) -> None:
     delay = job_process_seconds()
-    conn = psycopg2.connect(pg_dsn())
+    try:
+        conn = psycopg2.connect(pg_dsn())
+    except Exception:
+        log.exception("job %s: postgres connect before processing", job_id)
+        return
     name: str | None = None
     try:
         conn.autocommit = False
@@ -114,7 +177,12 @@ def process_job(rdb: redis.Redis, job_id: str) -> None:
     log.info("job %s: processing %r (simulated work %ss)", job_id, name, delay)
     time.sleep(delay)
 
-    conn = psycopg2.connect(pg_dsn())
+    try:
+        conn = psycopg2.connect(pg_dsn())
+    except Exception:
+        log.exception("job %s: postgres connect before completion", job_id)
+        mark_job_failed(job_id)
+        return
     item_id: int | None = None
     try:
         conn.autocommit = False
@@ -166,8 +234,13 @@ def process_job(rdb: redis.Redis, job_id: str) -> None:
 
 
 def run_job_loop(rdb: redis.Redis) -> None:
+    next_recovery_at = 0.0
     while True:
         try:
+            now = time.time()
+            if now >= next_recovery_at:
+                recover_stale_processing_jobs()
+                next_recovery_at = now + 30.0
             out = rdb.brpop(JOBS_QUEUE_KEY, timeout=0)
             if not out:
                 continue
@@ -180,9 +253,17 @@ def run_job_loop(rdb: redis.Redis) -> None:
             job_id = str(payload.get("job_id", "")).strip()
             if not job_id:
                 continue
-            process_job(rdb, job_id)
+            try:
+                process_job(rdb, job_id)
+            except Exception:
+                # Never let one job crash the queue loop.
+                log.exception("job %s: unhandled processing error", job_id)
+                mark_job_failed(job_id)
         except redis.RedisError as exc:
             log.error("BRPop: %s", exc)
+            time.sleep(1)
+        except Exception:
+            log.exception("run_job_loop: unexpected error")
             time.sleep(1)
 
 
@@ -272,6 +353,8 @@ def main() -> None:
     except Exception as exc:  # noqa: BLE001
         log.exception("postgres: %s", exc)
         raise SystemExit(1) from exc
+
+    recover_stale_processing_jobs()
 
     threading.Thread(target=run_heartbeat_loop, args=(rdb,), daemon=True).start()
     threading.Thread(target=run_job_loop, args=(rdb,), daemon=True).start()
