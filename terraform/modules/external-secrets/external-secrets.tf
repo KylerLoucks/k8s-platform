@@ -30,6 +30,7 @@ resource "aws_iam_policy" "ack_eso_secrets_manager" {
       {
         Effect = "Allow"
         Action = [
+          "secretsmanager:ListSecrets",
           "secretsmanager:CreateSecret",
           "secretsmanager:TagResource",
           "secretsmanager:RotateSecret",

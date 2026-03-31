@@ -51,6 +51,7 @@ externalSecret:
     name: aws-secrets-manager-cluster-secretstore
     kind: ClusterSecretStore
   dataFromFind: null
+  dataFromExtract: null
   hostRemoteRef:
     key: ""
     property: host

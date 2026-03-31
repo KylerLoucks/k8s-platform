@@ -43,7 +43,7 @@ externalSecret:
   dataFromFind:
     path: rds!
     tags:
-      "platform:instance-id": platform
+      identifier: platform
   hostRemoteRef:
     key: platform/dev/rds-host
     property: host

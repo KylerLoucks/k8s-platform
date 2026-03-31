@@ -58,6 +58,7 @@ externalSecret:
   #   tags:
   #     "aws:rds:db-instance-id": my-db-id
   dataFromFind: null
+  dataFromExtract: null
   hostRemoteRef:
     key: ""
     property: host

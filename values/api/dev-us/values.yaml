@@ -59,9 +59,8 @@ externalSecret:
   dataFromFind:
     path: rds!
     tags:
-      "platform:instance-id": platform
+      identifier: platform
   hostRemoteRef:
-    # Must match terraform/aws output rds_host_secret_name (platform/<env>/rds-host)
     key: platform/dev/rds-host
     property: host
   data: []
