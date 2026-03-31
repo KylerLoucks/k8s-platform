@@ -24,3 +24,15 @@ rds_skip_final_snapshot   = true
 rds_master_secret_tags = {
   "platform:instance-id" = "platform"
 }
+
+# Argo CD repo-server: larger Helm renders + multi-source apps can hit default timeouts under load.
+argocd_repo_resources = {
+  requests = {
+    cpu    = "500m"
+    memory = "1Gi"
+  }
+  limits = {
+    cpu    = "2"
+    memory = "4Gi"
+  }
+}
