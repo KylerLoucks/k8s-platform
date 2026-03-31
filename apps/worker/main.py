@@ -61,11 +61,10 @@ def pg_dsn() -> str:
     user = os.environ.get("DB_USER", "").strip()
     password = os.environ.get("DB_PASSWORD", "")
     name = os.environ.get("DB_NAME", "").strip()
+    sslmode = os.environ.get("DB_SSLMODE", "require").strip() or "require"
     if not host or not user or not name:
         raise RuntimeError("DB_HOST, DB_USER, DB_NAME are required for job processing")
-    return (
-        f"host={host} port={port} user={user} password={password} dbname={name} sslmode=disable"
-    )
+    return f"host={host} port={port} user={user} password={password} dbname={name} sslmode={sslmode}"
 
 
 def redis_client() -> redis.Redis:

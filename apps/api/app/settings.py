@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     db_name: str = Field(default="", validation_alias="DB_NAME")
     db_user: str = Field(default="", validation_alias="DB_USER")
     db_password: str = Field(default="", validation_alias="DB_PASSWORD")
+    db_sslmode: str = Field(default="require", validation_alias="DB_SSLMODE")
 
     # e.g. redis.dev-redis.svc.cluster.local:6379 — used to enqueue jobs and (elsewhere) pub/sub
     redis_addr: str = Field(default="", validation_alias="REDIS_ADDR")
@@ -25,7 +26,10 @@ class Settings(BaseSettings):
             return None
         pw = quote_plus(self.db_password)
         user = quote_plus(self.db_user)
-        return f"postgresql+psycopg2://{user}:{pw}@{self.db_host}:{self.db_port}/{self.db_name}"
+        return (
+            f"postgresql+psycopg2://{user}:{pw}@{self.db_host}:{self.db_port}/{self.db_name}"
+            f"?sslmode={quote_plus(self.db_sslmode)}"
+        )
 
 
 settings = Settings()
