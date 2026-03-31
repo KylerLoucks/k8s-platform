@@ -1,3 +1,8 @@
+envFromSecretOptional: false
+
+deploymentAnnotations:
+  argocd.argoproj.io/sync-wave: "1"
+
 replicaCount: 1
 image:
   # Built from apps/worker → ghcr.io/<repo>/worker:<tag>

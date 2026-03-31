@@ -1,3 +1,12 @@
+# When true, envFrom secretRef is optional (pod starts even if the Secret is missing).
+# Default false: the Secret must exist (from ExternalSecrets or static secret.yaml).
+# Set true only for debugging; without DB_* env the app will fail readiness.
+envFromSecretOptional: false
+
+# Applied to the Deployment metadata (e.g. Argo CD sync wave after ExternalSecret).
+deploymentAnnotations:
+  argocd.argoproj.io/sync-wave: "1"
+
 replicaCount: 2
 image:
   # Default image location (built from apps/ws → ghcr.io/<repo>/ws:<tag>)

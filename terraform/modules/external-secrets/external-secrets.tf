@@ -137,6 +137,10 @@ resource "helm_release" "secretstores" {
       aws = {
         region = var.region
       }
+      serviceAccount = {
+        name      = "external-secrets"
+        namespace = var.external_secrets_namespace
+      }
     })
   ]
 

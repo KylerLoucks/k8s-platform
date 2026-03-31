@@ -1,3 +1,8 @@
 enabled: true
 aws:
-    region: ""
+  region: ""
+# ClusterSecretStore must set namespace on serviceAccountRef (ESO docs). Required for IRSA
+# validation, especially when the controller runs on Fargate (no instance metadata).
+serviceAccount:
+  name: external-secrets
+  namespace: external-secrets

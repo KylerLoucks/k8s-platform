@@ -4,6 +4,10 @@ metadata:
   name: {{ include "platform-worker.fullname" . }}
   labels:
     {{- include "platform-worker.labels" . | nindent 4 }}
+  {{- if .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml .Values.deploymentAnnotations | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -43,6 +47,9 @@ spec:
                 name: {{ include "platform-worker.fullname" . }}
             - secretRef:
                 name: {{ include "platform-worker.fullname" . }}
+                {{- if .Values.envFromSecretOptional }}
+                optional: true
+                {{- end }}
           volumeMounts:
             - name: meta
               mountPath: /app/meta

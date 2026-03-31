@@ -4,6 +4,10 @@ metadata:
   name: {{ include "platform-api.fullname" . }}
   labels:
     {{- include "platform-api.labels" . | nindent 4 }}
+  {{- if .Values.deploymentAnnotations }}
+  annotations:
+    {{- toYaml .Values.deploymentAnnotations | nindent 4 }}
+  {{- end }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -46,6 +50,9 @@ spec:
                 name: {{ include "platform-api.fullname" . }}
             - secretRef:
                 name: {{ include "platform-api.fullname" . }}
+                {{- if .Values.envFromSecretOptional }}
+                optional: true
+                {{- end }}
           {{- if .Values.resources }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

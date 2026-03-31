@@ -1,3 +1,8 @@
+envFromSecretOptional: false
+
+deploymentAnnotations:
+  argocd.argoproj.io/sync-wave: "1"
+
 replicaCount: 2
 image:
   # Default image location (built from apps/api → ghcr.io/<repo>/api:<tag>)
