@@ -99,6 +99,18 @@ def process_job(rdb: redis.Redis, job_id: str) -> None:
         conn.close()
 
     assert name is not None
+    processing_ev = {
+        "type": "job.processing",
+        "job_id": job_id,
+        "name": name,
+    }
+    processing_payload = json.dumps(processing_ev, separators=(",", ":"))
+    try:
+        rdb.publish(JOBS_EVENTS_CHANNEL, processing_payload)
+        log.info("job %s: published processing event to %s", job_id, JOBS_EVENTS_CHANNEL)
+    except redis.RedisError as exc:
+        log.error("job %s: publish processing: %s", job_id, exc)
+
     log.info("job %s: processing %r (simulated work %ss)", job_id, name, delay)
     time.sleep(delay)
 

@@ -31,7 +31,7 @@ config:
   # DB_* from External Secrets: credentials via RDS-managed secret; host via hostRemoteRef.
   DB_PORT: "5432"
   DB_NAME: platform
-  JOB_PROCESS_SECONDS: "2"
+  JOB_PROCESS_SECONDS: "10" # time it takes to process a job
 
 secrets: {}
 

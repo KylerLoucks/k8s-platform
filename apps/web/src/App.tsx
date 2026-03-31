@@ -141,7 +141,10 @@ export function App() {
         let highlight = false;
         try {
           const o = JSON.parse(line) as { type?: string; job_id?: string; item_id?: number; name?: string };
-          if (o.type === "job.completed") {
+          if (o.type === "job.processing") {
+            display = `Job processing: “${o.name}” (${o.job_id?.slice(0, 8)}…)`;
+            void refreshJobs();
+          } else if (o.type === "job.completed") {
             display = `Job finished: “${o.name}” → item #${o.item_id} (${o.job_id?.slice(0, 8)}…)`;
             highlight = true;
             void refreshJobs();
