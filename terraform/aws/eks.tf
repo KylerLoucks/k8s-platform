@@ -32,9 +32,25 @@ module "eks" {
         }
       }
     }
+
+    dev-user = {
+      principal_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:user/dev"
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = { type = "cluster" }
+        }
+      }
+    }
+
   }
 
-  endpoint_public_access  = false
+  endpoint_public_access_cidrs = [
+    module.vpc.vpc_cidr_block,
+    "50.39.170.84/32",
+  ]
+
+  endpoint_public_access  = true
   endpoint_private_access = true
 
   security_group_additional_rules = {
@@ -170,10 +186,10 @@ module "external-secrets" {
   cluster_name              = module.eks.cluster_name
   cluster_oidc_provider_arn = module.eks.oidc_provider_arn
   environment               = var.environment
-  region                    = data.aws_region.current.name
+  region                    = data.aws_region.current.region
 
   external_secrets_secrets_manager_arns = [
-    "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:platform/${var.environment}/*",
+    "arn:aws:secretsmanager:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:secret:platform/${var.environment}/*",
     module.rds.db_instance_master_user_secret_arn,
   ]
 

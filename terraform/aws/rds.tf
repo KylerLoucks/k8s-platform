@@ -78,3 +78,21 @@ output "rds_host_secret_name" {
   description = "Secrets Manager secret name for host JSON (use as externalSecret.hostRemoteRef.key in Helm)"
   value       = aws_secretsmanager_secret.rds_host.name
 }
+
+# Apply custom tags to the AWS-managed RDS master secret after it is created so ESO can find it.
+resource "null_resource" "tag_rds_master_secret" {
+  for_each = var.rds_master_secret_tags
+
+  triggers = {
+    secret_arn = module.rds.db_instance_master_user_secret_arn
+    tag_key    = each.key
+    tag_value  = each.value
+    region     = data.aws_region.current.region
+  }
+
+  provisioner "local-exec" {
+    command = "aws secretsmanager tag-resource --secret-id ${self.triggers.secret_arn} --tags Key=${self.triggers.tag_key},Value=${self.triggers.tag_value} --region ${self.triggers.region}"
+  }
+
+  depends_on = [module.rds]
+}

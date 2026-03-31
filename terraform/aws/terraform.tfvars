@@ -21,3 +21,6 @@ rds_allocated_storage     = 20
 rds_max_allocated_storage = 25
 rds_storage_type          = "gp3"
 rds_skip_final_snapshot   = true
+rds_master_secret_tags = {
+  "platform:instance-id" = "platform"
+}
