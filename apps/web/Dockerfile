@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1
+# build trigger: 2026-03-30
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
