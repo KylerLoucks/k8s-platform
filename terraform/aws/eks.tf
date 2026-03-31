@@ -116,7 +116,19 @@ module "eks" {
         },
         {
           namespace = "monitoring"
-        },
+        }
+      ]
+      tags = {
+        Owner = var.environment
+      }
+    }
+
+    dev = {
+      name = "dev"
+      selectors = [
+        {
+          namespace = "dev-*"
+        }
       ]
       tags = {
         Owner = var.environment
