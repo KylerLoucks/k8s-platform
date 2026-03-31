@@ -155,9 +155,9 @@ module "argocd" {
       project   = "default"
       sources = [
         {
-          repo_url        = "git@github.com:KylerLoucks/k8s-platform.git"
+          repo_url        = "https://github.com/KylerLoucks/k8s-platform.git"
           target_revision = "main"
-          path            = "argocd/bootstrap/${var.environment}"
+          path            = "argocd/bootstrap/${var.environment}/apps"
         }
       ]
       destination_namespace = "argocd"

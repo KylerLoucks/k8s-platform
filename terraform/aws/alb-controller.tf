@@ -30,7 +30,7 @@ resource "helm_release" "alb_controller" {
       vpcId       = module.vpc.vpc_id
       region      = data.aws_region.current.name
       image = {
-        repository = "602401143452.dkr.ecr.${data.aws_region.current.name}.amazonaws.com/amazon/aws-load-balancer-controller"
+        repository = "602401143452.dkr.ecr.${data.aws_region.current.region}.amazonaws.com/amazon/aws-load-balancer-controller"
       }
       replicaCount = 1
       serviceAccount = {
