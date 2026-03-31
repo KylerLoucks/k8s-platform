@@ -28,7 +28,7 @@ resource "helm_release" "alb_controller" {
     yamlencode({
       clusterName = var.eks_cluster_name
       vpcId       = module.vpc.vpc_id
-      region      = data.aws_region.current.name
+      region      = data.aws_region.current.region
       image = {
         repository = "602401143452.dkr.ecr.${data.aws_region.current.region}.amazonaws.com/amazon/aws-load-balancer-controller"
       }

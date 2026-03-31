@@ -184,11 +184,11 @@ resource "kubernetes_ingress_v1" "argocd_alb" {
     name      = "argocd-server-alb"
     namespace = "argocd"
     annotations = {
-      "kubernetes.io/ingress.class"              = "alb"
-      "alb.ingress.kubernetes.io/scheme"         = "internet-facing"
-      "alb.ingress.kubernetes.io/target-type"    = "ip"
-      "alb.ingress.kubernetes.io/listen-ports"   = "[{\"HTTP\":80}]"
-      "alb.ingress.kubernetes.io/group.name"     = "platform-dev-us"
+      "kubernetes.io/ingress.class"                = "alb"
+      "alb.ingress.kubernetes.io/scheme"           = "internet-facing"
+      "alb.ingress.kubernetes.io/target-type"      = "ip"
+      "alb.ingress.kubernetes.io/listen-ports"     = "[{\"HTTP\":80}]"
+      "alb.ingress.kubernetes.io/group.name"       = "platform-dev-us"
       "alb.ingress.kubernetes.io/healthcheck-path" = "/argocd/healthz"
     }
   }

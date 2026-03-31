@@ -1,3 +1,6 @@
+environment      = "dev"
+eks_cluster_name = "k8s-platform-dev"
+
 external_redis_auth_token_update_strategy = "ROTATE"
 external_redis_node_type                  = "cache.t4g.small"
 external_redis_engine_version             = "7.1"
