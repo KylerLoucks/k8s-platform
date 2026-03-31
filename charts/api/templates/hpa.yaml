@@ -5,6 +5,10 @@ metadata:
   name: {{ include "platform-api.fullname" . }}
   labels:
     {{- include "platform-api.labels" . | nindent 4 }}
+  {{- if .Values.hpaAnnotations }}
+  annotations:
+    {{- toYaml .Values.hpaAnnotations | nindent 4 }}
+  {{- end }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

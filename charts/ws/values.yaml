@@ -4,8 +4,8 @@
 envFromSecretOptional: false
 
 # Applied to the Deployment metadata (e.g. Argo CD sync wave after ExternalSecret).
-deploymentAnnotations:
-  argocd.argoproj.io/sync-wave: "1"
+deploymentAnnotations: {}
+hpaAnnotations: {}
 
 replicaCount: 2
 image:
