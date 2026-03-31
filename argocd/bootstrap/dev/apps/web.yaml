@@ -14,14 +14,14 @@ spec:
 
   sources:
     - repoURL: https://github.com/kylerloucks/k8s-platform.git
-      targetRevision: HEAD
+      targetRevision: main
       path: charts/web
       helm:
         valueFiles:
           - $values/values/web/dev-us/values.yaml
           - $values/values/web/dev-us/version.yaml
     - repoURL: https://github.com/kylerloucks/k8s-platform.git
-      targetRevision: HEAD
+      targetRevision: main
       ref: values
 
   destination:
