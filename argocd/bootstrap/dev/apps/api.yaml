@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dev-api
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/kylerloucks/k8s-platform.git
+      targetRevision: HEAD
+      path: charts/api
+      helm:
+        valueFiles:
+          - $values/values/api/dev-us/values.yaml
+          - $values/values/api/dev-us/version.yaml
+    - repoURL: https://github.com/kylerloucks/k8s-platform.git
+      targetRevision: HEAD
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev-api
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

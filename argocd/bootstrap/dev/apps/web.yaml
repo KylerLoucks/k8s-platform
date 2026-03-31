@@ -1,0 +1,36 @@
+# Application used to deploy a single chart to a single namespace.
+# It's typical to use a higher level Application manifest
+# to deploy everything in this folder. (e.g. path: argocd/bootstrap/dev/apps)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dev-web
+  namespace: argocd
+  # Keep this finalizer ONLY if when deleting this Application from Argo CD, you want to cascade delete all k8s resources such as deployments, services, etc.
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  sources:
+    - repoURL: https://github.com/kylerloucks/k8s-platform.git
+      targetRevision: HEAD
+      path: charts/web
+      helm:
+        valueFiles:
+          - $values/values/web/dev-us/values.yaml
+          - $values/values/web/dev-us/version.yaml
+    - repoURL: https://github.com/kylerloucks/k8s-platform.git
+      targetRevision: HEAD
+      ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev-web
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dev-worker
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/kylerloucks/k8s-platform.git
+      targetRevision: HEAD
+      path: charts/worker
+      helm:
+        valueFiles:
+          - $values/values/worker/dev-us/values.yaml
+          - $values/values/worker/dev-us/version.yaml
+    - repoURL: https://github.com/kylerloucks/k8s-platform.git
+      targetRevision: HEAD
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev-worker
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: redis
+version: 0.1.0
+type: application
+description: Minimal single-replica Redis for demo workloads
+appVersion: "7.2"

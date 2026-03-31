@@ -1,0 +1,7 @@
+1. Access the web by running these commands:
+  {{- if .Values.ingress.enabled }}
+  echo "http://{{ (index .Values.ingress.hosts 0).host }}"
+  {{- else }}
+  export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "web.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")
+  kubectl port-forward $POD_NAME 8080:{{ .Values.service.targetPort }} --namespace {{ .Release.Namespace }}
+  {{- end }}

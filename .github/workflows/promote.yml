@@ -1,0 +1,85 @@
+# Promote a GitOps application from one environment to the next
+name: Promote application
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "app name (web, api, ws, or worker)"
+        required: true
+        default: "web"
+        type: choice
+        options:
+          - web
+          - api
+          - ws
+          - worker
+      source_env:
+        description: 'Source environment'
+        required: true
+        default: 'dev-us'
+        type: choice
+        options:
+          - dev-us
+          - prod-us
+
+      target_env:
+        description: 'Target environment'
+        required: true
+        default: 'prod-us'
+        type: choice
+        options:
+          - dev-us
+          - prod-us
+
+      promote_container:
+        description: 'Promote container tag'
+        required: true
+        type: boolean
+        default: true
+
+      promote_configmaps:
+        description: 'Also promote env overlay values (non-image settings)'
+        required: true
+        type: boolean
+        default: true
+
+      message:
+        description: 'Commit message'
+        required: true
+        type: string
+        default: 'Application promotion'
+
+jobs:
+  promote:
+    # Allow the job to write to the repository
+    permissions:
+      contents: write
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.head_ref }}
+
+      
+      - name: Copy image tag from ${{ inputs.source_env }} to ${{ inputs.target_env }}
+        if: ${{ inputs.promote_container }}
+        uses: canastro/copy-file-action@master
+        with:
+          source: "values/${{ inputs.app }}/${{ inputs.source_env }}/version.yaml"
+          target: "values/${{ inputs.app }}/${{ inputs.target_env }}/version.yaml"
+
+      - name: Copy settings
+        if: ${{ inputs.promote_configmaps }}
+        uses: canastro/copy-file-action@master
+        with:
+          source: "values/${{ inputs.app }}/${{ inputs.source_env }}/settings.yaml"
+          target: "values/${{ inputs.app }}/${{ inputs.target_env }}/settings.yaml"
+
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: ${{ inputs.message }}

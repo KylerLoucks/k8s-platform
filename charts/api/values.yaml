@@ -1,0 +1,72 @@
+replicaCount: 2
+image:
+  # Default image location (built from apps/api → ghcr.io/<repo>/api:<tag>)
+  repository: ghcr.io/kylerloucks/k8s-platform/api
+  # Used when neither `digest` nor `ref` is set
+  tag: "main"
+  # Optional digest (e.g., "sha256:...") — when set, image becomes "<repository>@<digest>"
+  digest: ""
+  # Optional full image reference — when set, overrides everything above
+  # e.g. "ghcr.io/kylerloucks/k8s-platform/api@sha256:..."
+  ref: ""
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: api.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+config: {}
+secrets: {}
+externalSecret:
+  enabled: false
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager-cluster-secretstore
+    kind: ClusterSecretStore
+  # RDS-managed secret (recommended): find by Secrets Manager tags; JSON has username/password only.
+  # DB_HOST comes from a separate SM secret (see hostRemoteRef); merged in target.template.
+  # dataFromFind: null
+  # dataFromFind:
+  #   path: rds!
+  #   tags:
+  #     "aws:rds:db-instance-id": my-db-id
+  dataFromFind: null
+  hostRemoteRef:
+    key: ""
+    property: host
+  data: []
+podAnnotations: {}
+podLabels: {}
+securityContext: {}
+podSecurityContext: {}
+strategy: {}
+probe:
+  liveness:
+    path: /healthz
+    port: http
+  readiness:
+    path: /readyz
+    port: http
+

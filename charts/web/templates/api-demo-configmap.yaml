@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "web.fullname" . }}-apidemo
+  labels:
+    {{- include "web.labels" . | nindent 4 }}
+data:
+  api-config.js: |
+    window.__API_BASE__ = {{ .Values.apiPublicUrl | default "" | quote }};
+    window.__WS_BASE__ = {{ .Values.wsPublicUrl | default "" | quote }};

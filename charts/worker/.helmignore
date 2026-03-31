@@ -1,0 +1,10 @@
+*.swp
+*.bak
+*.tmp
+*.orig
+.git/
+.hg/
+.svn/
+.bzr/
+.DS_Store
+charts/

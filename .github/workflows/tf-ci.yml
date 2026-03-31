@@ -1,0 +1,133 @@
+name: Terraform CI
+
+on:
+
+  # Manual trigger with command selection
+  workflow_dispatch:
+    inputs:
+      command:
+        description: TF command
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+        default: plan
+      lock:
+        description: Use TF lock? (Recommend using `true` when `command` is set to `apply`.)
+        required: false
+        type: boolean
+        default: true
+
+  # Auto Terraform Plan on PR
+  pull_request:
+    paths:
+      - terraform/aws/tf-ci/**
+
+  # Auto Terraform Apply on merge or push to main
+  push:
+    branches: [main]
+    paths:
+      - terraform/aws/tf-ci/**
+
+      
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  AWS_ROLE_TO_ASSUME: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+  TF_PASSPHRASE: ${{ secrets.TF_PASSPHRASE }}
+
+
+jobs:
+  provision:
+    # Skip if PR labeled but not with run-plan/run-apply labels
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && (
+        github.event.action != 'labeled' ||
+        contains(github.event.pull_request.labels.*.name, 'run-plan') ||
+        contains(github.event.pull_request.labels.*.name, 'run-apply')
+      ))
+
+    environment: dev
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write      # allow issuing GitHub’s OIDC tokens to this job
+      actions: read        # Required to identify workflow run.
+      checks: write        # Required to add status summary.
+      contents: read       # Required to checkout repository.
+      pull-requests: write # Required to add PR comment.
+
+    steps:
+      - uses: actions/checkout@v4
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          role-to-assume: ${{ env.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.11.4
+          terraform_wrapper: false
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+
+      # Install Checkov  
+      - name: Setup Checkov
+        run: |
+          pip install checkov
+
+      # Determine terraform command based on workflow trigger type
+      - name: Determine Terraform command
+        id: tf-command
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "command=${{ inputs.command }}" >> $GITHUB_OUTPUT
+            echo "lock=${{ inputs.lock }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "command=apply" >> $GITHUB_OUTPUT
+            echo "lock=true" >> $GITHUB_OUTPUT
+          elif [[ "${{ contains(github.event.pull_request.labels.*.name, 'run-apply') }}" == "true" ]]; then
+            echo "command=apply" >> $GITHUB_OUTPUT
+            echo "lock=true" >> $GITHUB_OUTPUT
+          else
+            echo "command=plan" >> $GITHUB_OUTPUT
+            echo "lock=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Run plan by default, or apply on merge.
+      - uses: ./.github/actions/terraform-ci
+        with:
+          working-directory: ./terraform/aws/tf-ci
+          command: ${{ steps.tf-command.outputs.command }}
+          arg-lock: ${{ steps.tf-command.outputs.lock }}
+          plan-encrypt: ${{ env.TF_PASSPHRASE }}
+          validate: true
+          format: true
+          # Enable TFLint scanning
+          tflint-scan: true
+          # Enable Checkov security scanning  
+          checkov-scan: true
+
+      # Remove PR labels after execution if applicable
+      - name: Remove workflow labels
+        if: |
+          github.event_name == 'pull_request' && (
+            contains(github.event.pull_request.labels.*.name, 'run-plan') ||
+            contains(github.event.pull_request.labels.*.name, 'run-apply')
+          )
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'run-plan') }}" == "true" ]]; then
+            gh api /repos/${{ github.repository }}/issues/${PR_NUMBER}/labels/run-plan --method DELETE || true
+          fi
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'run-apply') }}" == "true" ]]; then
+            gh api /repos/${{ github.repository }}/issues/${PR_NUMBER}/labels/run-apply --method DELETE || true
+          fi

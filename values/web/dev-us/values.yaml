@@ -1,0 +1,53 @@
+replicaCount: 1
+
+image:
+  # Matches CI: ghcr.io/<repo>/web:<tag> (apps/web)
+  repository: ghcr.io/kylerloucks/k8s-platform/web
+  pullPolicy: IfNotPresent
+
+# Browser-visible API URL injected into window.__API_BASE__.
+# Option 1 (preferred, DNS): http://api.dev-us.yourdomain.com
+# Option 2 (temporary, no DNS): http://alb-dns-name>.us-east-1.elb.amazonaws.com
+apiPublicUrl: "http://api.dev-us.local"
+
+# Browser-visible WS URL injected into window.__WS_BASE__.
+# Option 1 (preferred, DNS): ws://ws.dev-us.yourdomain.com
+# Option 2 (temporary, no DNS): ws://alb-dns-name>.us-east-1.elb.amazonaws.com
+wsPublicUrl: "ws://ws.dev-us.local"
+
+ingress:
+  enabled: true
+  # Single ALB + path routing setup:
+  # - web handles / (and SPA routes)
+  # - api handles /api
+  # - ws handles /ws
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/group.name: platform-dev-us
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: app.dev-us.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+podAnnotations:
+  environment: dev-us
+
+config:
+  ENV_NAME: dev-us

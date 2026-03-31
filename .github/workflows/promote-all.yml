@@ -1,0 +1,105 @@
+# This workflow will promote all applications from one environment to the next in a single commit.
+name: Promote all applications (all-or-nothing)
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_env:
+        description: "Source environment"
+        required: true
+        default: "dev-us"
+        type: choice
+        options:
+          - dev-us
+          - prod-us
+
+      target_env:
+        description: "Target environment"
+        required: true
+        default: "prod-us"
+        type: choice
+        options:
+          - dev-us
+          - prod-us
+
+      message:
+        description: "Commit message"
+        required: true
+        type: string
+        default: "Application promotion (all apps)"
+
+concurrency:
+  group: promote-all-${{ github.ref }}-${{ inputs.source_env }}-${{ inputs.target_env }}
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Promote
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate and promote version.yaml for all apps
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ inputs.source_env }}" == "${{ inputs.target_env }}" ]]; then
+            echo "source_env and target_env are the same; nothing to promote." >&2
+            exit 1
+          fi
+
+          apps=()
+          for chart in charts/*/Chart.yaml; do
+            [[ -f "$chart" ]] || continue
+            apps+=( "$(basename "$(dirname "$chart")")" )
+          done
+
+          if [[ ${#apps[@]} -eq 0 ]]; then
+            echo "No Helm apps discovered under ./charts/*/Chart.yaml" >&2
+            exit 1
+          fi
+
+          echo "Discovered apps: ${apps[*]}"
+          echo "Promoting version.yaml from '${{ inputs.source_env }}' -> '${{ inputs.target_env }}'"
+
+          # Preflight (all-or-nothing): ensure every app has required files/dirs
+          for app in "${apps[@]}"; do
+            src_dir="values/${app}/${{ inputs.source_env }}"
+            dst_dir="values/${app}/${{ inputs.target_env }}"
+            src_file="${src_dir}/version.yaml"
+            dst_file="${dst_dir}/version.yaml"
+
+            [[ -d "${src_dir}" ]] || { echo "Missing directory: ${src_dir}" >&2; exit 1; }
+            [[ -d "${dst_dir}" ]] || { echo "Missing directory: ${dst_dir}" >&2; exit 1; }
+            [[ -f "${src_file}" ]] || { echo "Missing file: ${src_file}" >&2; exit 1; }
+            [[ -f "${dst_file}" ]] || { echo "Missing file: ${dst_file}" >&2; exit 1; }
+            echo "Preflight OK: ${app} (${src_file} -> ${dst_file})"
+          done
+
+          # Promote
+          for app in "${apps[@]}"; do
+            src="values/${app}/${{ inputs.source_env }}/version.yaml"
+            dst="values/${app}/${{ inputs.target_env }}/version.yaml"
+
+            echo "----"
+            echo "Promoting app '${app}': ${src} -> ${dst}"
+            echo "Source contents:"
+            cat "${src}"
+
+            cp "${src}" "${dst}"
+
+            echo "Target contents after copy:"
+            cat "${dst}"
+          done
+
+          echo "Promotion complete."
+
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: ${{ inputs.message }}
+

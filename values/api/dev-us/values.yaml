@@ -1,0 +1,67 @@
+fullnameOverride: api
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/kylerloucks/k8s-platform/api
+  pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  # Single ALB + path routing setup:
+  # - one shared host across web/api/ws
+  # - api handles /api*
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/group.name: platform-dev-us
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: app.dev-us.local
+      paths:
+        - path: /api
+          pathType: Prefix
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 2
+  targetCPUUtilizationPercentage: 65
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+podAnnotations:
+  environment: dev-us
+
+config:
+  ENV_NAME: dev-us
+  PORT: "8000"
+  # DB_USER, DB_PASSWORD from RDS-managed SM secret (dataFrom.find). DB_HOST from separate SM secret (hostRemoteRef).
+  DB_PORT: "5432"
+  DB_NAME: platform
+  # Must match the browser origin that serves the SPA.
+  CORS_ALLOW_ORIGIN: "http://app.dev-us.local"
+  REDIS_ADDR: redis.dev-redis.svc.cluster.local:6379
+
+secrets: {}
+
+externalSecret:
+  enabled: true
+  secretStoreRef:
+    name: aws-secrets-manager-cluster-secretstore
+    kind: ClusterSecretStore
+  dataFromFind:
+    path: rds!
+    tags:
+      "aws:rds:db-instance-id": platform
+  hostRemoteRef:
+    # Must match terraform/aws output rds_host_secret_name (platform/<env>/rds-host)
+    key: platform/dev/rds-host
+    property: host
+  data: []

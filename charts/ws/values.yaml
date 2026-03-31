@@ -1,0 +1,65 @@
+replicaCount: 2
+image:
+  # Default image location (built from apps/ws → ghcr.io/<repo>/ws:<tag>)
+  repository: ghcr.io/kylerloucks/k8s-workshop-argo-platform/ws
+  # Used when neither `digest` nor `ref` is set
+  tag: "main"
+  # Optional digest (e.g., "sha256:...") — when set, image becomes "<repository>@<digest>"
+  digest: ""
+  # Optional full image reference — when set, overrides everything above
+  # e.g. "ghcr.io/kylerloucks/k8s-workshop-argo-platform/ws@sha256:..."
+  ref: ""
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: ws.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+config: {}
+secrets: {}
+externalSecret:
+  enabled: false
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager-cluster-secretstore
+    kind: ClusterSecretStore
+  dataFromFind: null
+  hostRemoteRef:
+    key: ""
+    property: host
+  data: []
+podAnnotations: {}
+podLabels: {}
+securityContext: {}
+podSecurityContext: {}
+strategy: {}
+probe:
+  liveness:
+    path: /healthz
+    port: http
+  readiness:
+    path: /readyz
+    port: http
+

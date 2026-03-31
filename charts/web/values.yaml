@@ -1,0 +1,62 @@
+replicaCount: 2
+image:
+  # Default image (CI builds apps/web → ghcr.io/<repo>/web:<tag>)
+  repository: ghcr.io/kylerloucks/k8s-platform/web
+  # Used when neither `digest` nor `ref` is set
+  tag: "main"
+  # Optional digest (e.g., "sha256:...") — when set, image becomes "<repository>@<digest>"
+  digest: ""
+  # Optional full image reference — when set, overrides everything above
+  # e.g. "ghcr.io/kylerloucks/k8s-workshop-argo-platform/web@sha256:..."
+  ref: ""
+  pullPolicy: IfNotPresent
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 80
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: web.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+config: {}
+secrets: {}
+podAnnotations: {}
+podLabels: {}
+securityContext: {}
+podSecurityContext: {}
+strategy: {}
+probe:
+  liveness:
+    path: /
+    port: http
+  readiness:
+    path: /
+    port: http
+
+# Public API origin for the React SPA (injected as window.__API_BASE__ in api-config.js). Example: http://api.dev-us.local
+apiPublicUrl: ""
+
+# WebSocket origin for the React SPA (window.__WS_BASE__). Example: ws://ws.dev-us.local
+wsPublicUrl: ""
+
+# Optional: helps the web display "which overlays/valueFiles were applied" and other GitOps context.
+# This is meant to be set in env overlays under `values/web/<env>/`.

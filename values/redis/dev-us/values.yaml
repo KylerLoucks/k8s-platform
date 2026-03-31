@@ -1,0 +1,16 @@
+# In-cluster Redis for the app only (jobs queue + pub/sub). Cheap vs managed Redis; not shared with Argo CD.
+# Single replica, no persistence in dev — OK for demo; production: persistence + HA or ElastiCache.
+fullnameOverride: redis
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+persistence:
+  enabled: false

@@ -1,0 +1,7 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "platform-ws.fullname" . }}
+  labels:
+    {{- include "platform-ws.labels" . | nindent 4 }}
+rules: []

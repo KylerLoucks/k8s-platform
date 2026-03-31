@@ -1,0 +1,32 @@
+# In-cluster Redis for api/worker/ws (queue + pub/sub). Cost-friendly; separate from Argo CD’s own Redis.
+# Sync-wave -1 so Redis is up before apps that depend on it.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: dev-redis
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/kylerloucks/k8s-platform.git
+      targetRevision: HEAD
+      path: charts/redis
+      helm:
+        valueFiles:
+          - $values/values/redis/dev-us/values.yaml
+    - repoURL: https://github.com/kylerloucks/k8s-platform.git
+      targetRevision: HEAD
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: dev-redis
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true

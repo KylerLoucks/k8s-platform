@@ -1,0 +1,6 @@
+apiVersion: v2
+name: platform-ws
+version: 0.1.0
+type: application
+description: A Helm chart for Kubernetes to deploy platform-ws
+appVersion: "1.0.0"
