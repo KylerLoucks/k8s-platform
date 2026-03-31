@@ -89,25 +89,15 @@ module "argocd" {
           }
         }
 
-        # Enable TLS when ArgoCD talks to external Redis. Will cause connection errors if not set.
         controller = {
-          extraArgs = [
-            "--redis-use-tls",
-          ]
           resources = var.argocd_controller_resources
         }
 
         repoServer = {
-          extraArgs = [
-            "--redis-use-tls",
-          ]
           resources = var.argocd_repo_resources
         }
 
         server = {
-          extraArgs = [
-            "--redis-use-tls",
-          ]
           service   = { type = "ClusterIP" }
           resources = var.argocd_server_resources
 
