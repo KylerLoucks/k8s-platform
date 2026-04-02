@@ -45,6 +45,6 @@ externalSecret:
     tags:
       identifier: platform
   hostRemoteRef:
-    key: platform/dev/rds-host
+    key: platform/dev/rds/host
     property: host
   data: []

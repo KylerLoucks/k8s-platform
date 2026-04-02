@@ -53,8 +53,9 @@ module "rds" {
 # RDS-managed master secret (tagged for ESO dataFrom.find) only contains username + password.
 # Hostname is published separately so External Secrets can merge DB_HOST + credentials into one K8s Secret.
 resource "aws_secretsmanager_secret" "rds_host" {
-  name        = "platform/${var.environment}/rds-host"
-  description = "RDS hostname (JSON key: host). Master credentials use the RDS-managed secret."
+  name                    = "platform/${var.environment}/rds/host"
+  description             = "RDS hostname (JSON key: host). Master credentials use the RDS-managed secret."
+  recovery_window_in_days = 0 # immediate delete on destroy so the name is not blocked for 30 days
 }
 
 resource "aws_secretsmanager_secret_version" "rds_host" {

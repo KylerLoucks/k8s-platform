@@ -7,10 +7,10 @@ data "aws_iam_session_context" "caller" {
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "v21.2.0"
+  version = "21.16.0"
 
   name               = var.eks_cluster_name
-  kubernetes_version = "1.33"
+  kubernetes_version = "1.35"
   enable_irsa        = true # Allow IAM Roles for Service Accounts (IRSA)
 
   # Cluster encryption KMS key admins: Terraform caller + role used for kubectl/API access.

@@ -3,7 +3,7 @@
 # and Network Load Balancers (NLBs) on behalf of the Kubernetes services running in the EKS cluster.
 module "lb_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version = "~> 6.2.1" # module versions cannot be variable. aws provider ~5.0 requires versions 5.x
+  version = "6.4.0"
 
   name                                   = "aws-lb-controller-${data.aws_caller_identity.current.account_id}"
   attach_load_balancer_controller_policy = true

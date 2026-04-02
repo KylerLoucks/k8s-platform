@@ -1,7 +1,7 @@
 # IAM role for external-secrets
 module "external_secrets_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts"
-  version = "~> 6.2.1"
+  version = "6.4.0"
 
   name = "external-secrets-${data.aws_caller_identity.current.account_id}"
 

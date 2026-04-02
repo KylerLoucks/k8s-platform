@@ -3,7 +3,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 
 locals {
-  name = basename(path.cwd)
+  name = "demo-${basename(path.cwd)}"
 
   # Vpc module
   vpc_cidr = "11.1.0.0/16"
@@ -19,7 +19,7 @@ locals {
 ################################################################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "~> 5.0"
+  version = "6.6.0"
 
   name = local.name
   cidr = local.vpc_cidr
